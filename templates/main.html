@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html id="main-html">
+    <head>
+        <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet" />
+        <link href="/static/styles.css" rel="stylesheet"/>
+        <title>FoundYOU Website</title>
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    </head>
+    <body>
+        <div class="header">
+            <a class="header-link" href="#home">Home</a>
+            <a class="header-link" href="#foundyou">FoundYOU</a>
+            <a class="header-link" href="#recommendation">Recommendation</a>
+            <a class="header-link" href="#aboutus">About Us</a>
+        </div>
+
+        <div id="home" class="v28_3 content">
+            <div class="v44_4"></div>
+            <span class="v44_6">"Discover your skin tone match. <br> The perfect foundation for flawless beauty.”</span>
+            <div class="v44_9">
+            <div class="v44_5"></div>
+            <span class="v44_7">Start here</span>
+        </div>
+        <span class="v44_8">FoundYOU</span>
+        </div>
+
+        <div id="foundyou" class="v44_10 content">
+            <div class="v44_21"></div>
+            <div class="v44_22"></div>
+            <span class="v56_93">*Make sure your photo is clear, bright, and shows the whole face</span>
+            <span class="v57_93">It's Time to Explore Your Skin Tone</span>
+            <span class="v57_93a">Unlock the Perfect Foundation Match with Capturing or Uploading Your Best Photo for Best Result!</span>
+            <span class="v56_94">OR</span>
+            <div style="display: flex; justify-content: left; height: 550px;">
+                <video id="video_feed" autoplay></video>
+            </div>
+            <button id="capture_btn">Capture Image</button>
+            <label for="file_input" class="custom-file-upload">
+                <span id="file-label">Choose File Here</span>
+            </label>
+            <input type="file" id="file_input" accept="image/*" class="v56_95" onchange="updateFileName(this)">
+            <button id="upload_btn" class="v56_96">Upload Image</button>
+        </div>
+        <div id="recommendation" class="v57_94 content">
+            <div class="v57_95"></div>
+            <div class="v57_110"></div>
+            <div class="v61_144" id="recommended_image_container">
+                <img id="recommended_image" src="" alt="Recommended Foundation Image">
+            </div>
+            <span class="v61_140" id="recommendation_details"></span>
+            <div class="v57_107"></div>
+            <img class="v57_108" id="captured_image">
+            <div class="v57_109"></div>
+            <span class="v61_138">Skin color:</span>
+            <div class="v61_137" id="hex_color">
+                <span id="hex_color_text"></span>
+                <div id="hex_color_box"></div>
+            </div>
+            <span class="v61_139">The Best Foundation for You</span>
+        </div>
+        <div id="aboutus" class="v57_111 content">
+            <div class="v57_112"></div>
+            <span class="v57_136">FoundYOU</span>
+            <span class="v57_135">"Discover your skin tone match.The perfect foundation for flawless beauty.”</span>
+            <span class="v57_133">Introduce Our Team</span>
+            <div class="v57_122"></div>
+            <div class="v57_123"></div>
+            <div class="v57_132">
+                <div class="v57_129"></div>
+                <div class="v57_130"></div>
+                <span class="v57_131">Grace Pintaomas T.S.</span>
+            </div>
+            <div class="v57_126"></div>
+            <div class="v57_127"></div>
+            <span class="v57_128">Rafli Maulana Firmansyah</span>
+            <span class="v57_124">Dompak Nahason E.S.</span>
+        </div>
+
+        <script src="/static/script.js"></script>
+
+        <script>
+            $(document).ready(function() {
+            var videoFeed = document.getElementById('video_feed');
+            var fileInput = document.getElementById('file_input');
+    
+            document.getElementById('capture_btn').addEventListener('click', function() {
+                $(document).ready(function() {
+            var videoFeed = document.getElementById('video_feed');
+
+            document.getElementById('capture_btn').addEventListener('click', function() {
+                $.ajax({
+                    type: 'POST',
+                    url: '/capture',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#video_feed').attr('src', response.image_path);
+                            $('#captured_image').attr('src', response.image_path);
+                            $('#hex_color_text').text(response.skin_color);
+                            $('#hex_color_box').css('background-color', response.skin_color);
+
+                            displayFoundationRecommendation(response.skin_color);
+                        } else {
+                            console.error('Failed to capture image.');
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error capturing image:', error);
+                    }
+                });
+            });
+        });
+        });
+    
+            document.getElementById('upload_btn').addEventListener('click', function() {
+                var file = fileInput.files[0];
+                var formData = new FormData();
+                formData.append('file', file);
+    
+                $.ajax({
+                    type: 'POST',
+                    url: '/upload',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#captured_image').attr('src', response.image_path);
+                            $('#hex_color_text').text(response.skin_color);
+                            $('#hex_color_box').css('background-color', response.skin_color);
+
+                            displayFoundationRecommendation(response.skin_color);
+                        } else {
+                            console.error('Failed to upload image:', response.message);
+                        }
+                    },
+                    error: function(error) {
+                        console.error('Error uploading image:', error);
+                    }
+                });
+            });
+        });
+            function updateFileName(input) {
+            // Mengambil nama file yang diupload
+            var fileName = input.files[0].name;
+            
+            // Mengubah teks pada span dengan id "file-label"
+            document.getElementById('file-label').innerText = fileName;
+        }
+        function displayFoundationRecommendation(hexColor) {
+            $.ajax({
+                type: 'GET',
+                url: '/recommendation',
+                data: { 'hex_color': hexColor },
+                success: function(response) {
+                    console.log('Recommendation Response:', response);
+
+                    if (response.status === 'success') {
+                        var recommendation = response.foundation_recommendation;
+
+                        // Update the image source
+                        $('#recommended_image').attr('src', recommendation.current_source);
+
+                        // Update the recommendation details
+                        var recommendationText = `Brand: ${recommendation.brand}, Product: ${recommendation.product}, Desc: ${recommendation.description}, Hex: ${recommendation.hex}, URL: <a href="${recommendation.url}" target="_blank">${recommendation.url}</a>`;
+                        recommendationText = recommendationText.replace(/,/g, '<br>');
+                        $('#recommendation_details').html(recommendationText).css('white-space', 'nowrap');
+                    } else {
+                        console.error('Failed to get foundation recommendation:', response.message);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Error getting foundation recommendation:', textStatus, errorThrown);
+                    console.error('AJAX Request Object:', jqXHR);
+                }
+            });
+        }
+
+
+
+        </script>
+    </body>
+</html>
